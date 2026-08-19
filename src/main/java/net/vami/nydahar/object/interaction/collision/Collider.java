@@ -1,4 +1,4 @@
-package net.vami.nydahar.object.collision;
+package net.vami.nydahar.object.interaction.collision;
 
 import net.vami.nydahar.object.GameObject;
 import net.vami.nydahar.util.AABB;

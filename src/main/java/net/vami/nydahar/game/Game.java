@@ -12,6 +12,8 @@ import net.vami.nydahar.render.SpriteManager;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferStrategy;
+import java.util.ArrayList;
+import java.util.Comparator;
 
 public class Game implements Runnable {
     private static Game instance;
@@ -56,10 +58,15 @@ public class Game implements Runnable {
     @Override
     public void run() {
         RegistryBootstrap.register(); // register everything
-        player = Entities.PLAYER.create(100,0);
 
+        player = Entities.PLAYER.create(100,0);
+        Entities.WOLF.create(400, 200);
         for (int i = 0; i < 128; i += 16) {
             Tiles.BLACK_FLOOR.create(100 + i, 400 - i, "black_floor");
+        }
+
+        for (int i = 0; i < 512; i += 16) {
+            Tiles.BLACK_FLOOR.create(200 + i, 272, "black_floor");
         }
 
         // create buffers for rendering
@@ -110,7 +117,7 @@ public class Game implements Runnable {
             double sleepTime = Math.min(untilNextTick, untilNextFrame);
             long nanoSleepTime = (long) (sleepTime * 1_000_000_000L);
 
-            waitForNextEvent(nanoSleepTime);
+            sleep(nanoSleepTime);
 
             if (now - statsTimer >= 1_000_000_000) {
                 System.out.println("TPS: " + ticks + " | FPS: " + frames);
@@ -124,7 +131,7 @@ public class Game implements Runnable {
 
     private static final long SPIN_THRESHOLD = 1_000_000L; // 1 ms
 
-    private void waitForNextEvent(long waitNanos) {
+    private void sleep(long waitNanos) {
         if (waitNanos <= 0) return;
 
         long deadline = System.nanoTime() + waitNanos;
@@ -179,10 +186,12 @@ public class Game implements Runnable {
         g.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
 
         // rendering
-        for (GameObject gameObject : GameObject.objects()) {
-            if (!gameObject.hasSprite()) continue;
+        ArrayList<GameObject> objects = new ArrayList<>(GameObject.objects());
+        objects.sort(Comparator.comparing(GameObject::getRenderLayer));
 
-            spriteRenderer.render(g, gameObject, alpha);
+        for (GameObject object : objects) {
+            if (!object.hasSprite()) continue;
+            spriteRenderer.render(g, object, alpha);
         }
 
         // dispose graphics and show next drawn buffer

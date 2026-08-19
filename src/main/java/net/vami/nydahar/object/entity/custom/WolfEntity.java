@@ -1,11 +1,16 @@
 package net.vami.nydahar.object.entity.custom;
 
 import net.vami.nydahar.object.entity.EntityObject;
+import net.vami.nydahar.render.sprite.Sprites;
 
 public class WolfEntity extends EntityObject {
-    public static final double SPEED = 200;
 
     public WolfEntity(double x, double y) {
         super(x, y);
+    }
+
+    @Override
+    public void registerSprite() {
+        setSprite(Sprites.get("entities/enemy"));
     }
 }

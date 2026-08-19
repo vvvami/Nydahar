@@ -1,10 +1,9 @@
 package net.vami.nydahar.object.entity.custom;
 
 import net.vami.nydahar.input.Input;
-import net.vami.nydahar.object.collision.Collider;
+import net.vami.nydahar.object.interaction.collision.Collider;
 import net.vami.nydahar.object.entity.EntityObject;
 import net.vami.nydahar.object.entity.attribute.Attributes;
-import net.vami.nydahar.render.sprite.Sprite;
 import net.vami.nydahar.render.sprite.Sprites;
 
 public class PlayerEntity extends EntityObject {
@@ -15,7 +14,7 @@ public class PlayerEntity extends EntityObject {
         drag = 600;
 
         attributes.set(Attributes.SPEED, 200d);
-        attributes.set(Attributes.JUMP, 110d);
+        attributes.set(Attributes.JUMP, 210d);
         attributes.set(Attributes.SCALE, 0d);
         attributes.set(Attributes.AUTO_STEP, 17d);
 

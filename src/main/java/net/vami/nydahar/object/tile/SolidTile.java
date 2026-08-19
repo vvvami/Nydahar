@@ -1,6 +1,6 @@
 package net.vami.nydahar.object.tile;
 
-import net.vami.nydahar.object.collision.Collider;
+import net.vami.nydahar.object.interaction.collision.Collider;
 
 public class SolidTile extends TileObject {
     public SolidTile(double x, double y, String sprite) {

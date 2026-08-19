@@ -19,6 +19,8 @@ public class ObjectRenderer {
         double x = MathUtil.lerp(prevPos.x, pos.x, alpha);
         double y = MathUtil.lerp(prevPos.y, pos.y, alpha);
 
+        y += gameObject.getStepRenderOffset(); // smooth autostepping
+
         int width = (int) Math.round(gameObject.getScaledWidth());
         int height = (int) Math.round(gameObject.getScaledHeight());
 

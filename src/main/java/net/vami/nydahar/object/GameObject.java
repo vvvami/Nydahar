@@ -1,13 +1,15 @@
 package net.vami.nydahar.object;
 
 import net.vami.nydahar.game.World;
-import net.vami.nydahar.object.collision.Collider;
+import net.vami.nydahar.object.interaction.collision.Collider;
 import net.vami.nydahar.object.entity.EntityObject;
 import net.vami.nydahar.object.entity.attribute.Attributes;
+import net.vami.nydahar.render.RenderLayer;
 import net.vami.nydahar.render.RenderSettings;
 import net.vami.nydahar.render.sprite.Sprite;
 import net.vami.nydahar.render.sprite.SpriteAnimator;
 import net.vami.nydahar.util.AABB;
+import net.vami.nydahar.util.MathUtil;
 import net.vami.nydahar.util.Vec2;
 
 import java.util.Collection;
@@ -28,10 +30,13 @@ public abstract class GameObject {
     protected Sprite sprite;
     protected SpriteAnimator animator;
 
+    protected RenderLayer renderLayer = RenderLayer.ENTITY;
+
     protected Collider collider;
     protected boolean hasCollision = true;
 
     protected boolean grounded = false;
+    private double stepRenderOffset;
 
     protected double scale = 1;
 
@@ -53,13 +58,19 @@ public abstract class GameObject {
             animator.update(dt);
         }
 
+        prevPos.set(pos);
+
         if (hasGravity()) applyGravity(dt);
 
-        prevPos.set(pos);
+        updateStepSmoothing(dt);
 
         move(vel.x * dt, vel.y * dt);
 
         if (hasDrag()) applyDrag(dt);
+    }
+
+    public double getStepRenderOffset() {
+        return stepRenderOffset;
     }
 
     private void applyDrag(double dt) {
@@ -92,12 +103,16 @@ public abstract class GameObject {
         for (GameObject object : Collider.map().values()) {
             if (!object.canCollide()) continue;
 
+            if (this instanceof EntityObject entity && object instanceof EntityObject otherEntity) {
+                if (!entity.canCollideWithOther() || !otherEntity.canCollideWithOther()) continue;
+            }
+
             Collider other = object.getCollider();
             if (other == null || other == collider) continue;
 
             if (!collider.isCollidingWith(other)) continue;
 
-            if (isGrounded() && tryAutoStep(other)) {
+            if (isGrounded() && autoStep(other)) {
                 continue;
             }
 
@@ -117,7 +132,7 @@ public abstract class GameObject {
         }
     }
 
-    private boolean tryAutoStep(Collider obstacle) {
+    private boolean autoStep(Collider obstacle) {
         AABB box = collider.getBox();
         AABB obstacleBox = obstacle.getBox();
 
@@ -141,18 +156,36 @@ public abstract class GameObject {
             return false;
         }
 
+        prevPos.y -= stepHeight;
+        stepRenderOffset += stepHeight;
+
         grounded = true;
         return true;
+    }
+
+    private void updateStepSmoothing(double dt) {
+        stepRenderOffset = MathUtil.lerp(stepRenderOffset, 0, 1.0 - Math.exp(-8.0 * dt));
+
+        if (Math.abs(stepRenderOffset) < 0.1) {
+            stepRenderOffset = 0;
+        }
     }
 
     private void moveY(double dy) {
         if (dy == 0) return;
 
         pos.y += dy;
+
+        if (collider == null) return;
+
         collider.update(this);
 
         for (GameObject object : Collider.map().values()) {
             if (!object.canCollide()) continue;
+
+            if (this instanceof EntityObject entity && object instanceof EntityObject otherEntity) {
+                if (!entity.canCollideWithOther() || !otherEntity.canCollideWithOther()) continue;
+            }
 
             Collider other = object.getCollider();
             if (other == collider) continue;
@@ -270,10 +303,6 @@ public abstract class GameObject {
         hasCollision = collision;
     }
 
-    public boolean canCollideWithOther() {
-        return false;
-    }
-
     public Sprite getSprite() {
         if (animator == null) return sprite;
 
@@ -310,6 +339,10 @@ public abstract class GameObject {
         if (sprite == null) return 0;
 
         return sprite.getHeight() * getTotalScale();
+    }
+
+    public RenderLayer getRenderLayer() {
+        return renderLayer;
     }
 
     public static HashMap<UUID, GameObject> list() {
