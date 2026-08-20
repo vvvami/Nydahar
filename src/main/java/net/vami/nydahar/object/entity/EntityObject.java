@@ -4,7 +4,8 @@ import net.vami.nydahar.object.GameObject;
 import net.vami.nydahar.object.interaction.collision.Collider;
 import net.vami.nydahar.object.entity.attribute.AttributeMap;
 import net.vami.nydahar.object.entity.attribute.Attributes;
-import net.vami.nydahar.object.interaction.damage.Damager;
+import net.vami.nydahar.object.interaction.damage.DamageType;
+import net.vami.nydahar.object.interaction.damage.HurtSource;
 import net.vami.nydahar.render.RenderSettings;
 
 public abstract class EntityObject extends GameObject {
@@ -15,12 +16,26 @@ public abstract class EntityObject extends GameObject {
 
     public EntityObject(double x, double y) {
         super(x, y);
+        initAttributes();
         health = attributes.get(Attributes.MAX_HEALTH);
         setCollider(new Collider(this));
     }
 
-    public void hurt(Damager damager, double amount) {
+    @Override
+    public void update(double dt) {
+        super.update(dt);
+
+        if (isDead() && pos != null) {
+            remove();
+        }
+    }
+
+    public void hurt(HurtSource hurtSource, double amount) {
         this.setHealth(getHealth() - amount);
+    }
+
+    public void hurt(DamageType type, double amount) {
+        hurt(new HurtSource(type), amount);
     }
 
     public double getHealth() {
@@ -31,6 +46,10 @@ public abstract class EntityObject extends GameObject {
         this.health = health;
     }
 
+    public boolean isDead() {
+        return health <= 0;
+    }
+
     public boolean canCollideWithOther() {
         return false;
     }
@@ -38,6 +57,8 @@ public abstract class EntityObject extends GameObject {
     public AttributeMap attributes() {
         return attributes;
     }
+
+    public abstract void initAttributes();
 
     @Override
     public double getTotalScale() {

@@ -22,7 +22,7 @@ public class Game implements Runnable {
     private final Canvas canvas;
     private Thread thread;
 
-    private final int TPS = 60;
+    public static final int TPS = 60;
     private final int FPS = 60;
 
     private boolean running = false;

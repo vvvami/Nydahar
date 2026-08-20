@@ -16,6 +16,8 @@ public class ObjectRenderer {
         Vec2 pos = gameObject.getPos();
         Vec2 prevPos = gameObject.getPrevPos();
 
+        if (pos == null) return;
+
         double x = MathUtil.lerp(prevPos.x, pos.x, alpha);
         double y = MathUtil.lerp(prevPos.y, pos.y, alpha);
 

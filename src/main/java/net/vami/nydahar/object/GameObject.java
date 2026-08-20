@@ -27,6 +27,8 @@ public abstract class GameObject {
     protected Vec2 vel = new Vec2(0,0);
     protected double drag = 0;
 
+    protected boolean hasGravity = true;
+
     protected Sprite sprite;
     protected SpriteAnimator animator;
 
@@ -58,11 +60,13 @@ public abstract class GameObject {
             animator.update(dt);
         }
 
+        if (pos == null) return;
+
         prevPos.set(pos);
 
         if (hasGravity()) applyGravity(dt);
 
-        updateStepSmoothing(dt);
+        updateStepSmooth(dt);
 
         move(vel.x * dt, vel.y * dt);
 
@@ -156,6 +160,7 @@ public abstract class GameObject {
             return false;
         }
 
+        // for auto-step render smoothing
         prevPos.y -= stepHeight;
         stepRenderOffset += stepHeight;
 
@@ -163,7 +168,7 @@ public abstract class GameObject {
         return true;
     }
 
-    private void updateStepSmoothing(double dt) {
+    private void updateStepSmooth(double dt) {
         stepRenderOffset = MathUtil.lerp(stepRenderOffset, 0, 1.0 - Math.exp(-8.0 * dt));
 
         if (Math.abs(stepRenderOffset) < 0.1) {
@@ -269,7 +274,23 @@ public abstract class GameObject {
     }
 
     public boolean hasGravity() {
-        return true;
+        return hasGravity;
+    }
+
+    public void doGravity(boolean gravity) {
+        this.hasGravity = gravity;
+    }
+
+    public void delete() {
+        remove();
+        objectMap.remove(this.uuid);
+    }
+
+    public void remove() {
+        this.pos = null;
+
+        doCollision(false);
+        doGravity(false);
     }
 
     public Collider getCollider() {
@@ -291,7 +312,7 @@ public abstract class GameObject {
             Collider other = object.getCollider();
             if (other == null || other == collider) continue;
 
-            if (collider.isCollidingWith(other)) {
+            if (getCollider().isCollidingWith(other)) {
                 return true;
             }
         }
@@ -299,7 +320,20 @@ public abstract class GameObject {
         return false;
     }
 
-    public void setCollision(boolean collision) {
+    public boolean isCollidingWith(GameObject other) {
+        for (GameObject object : Collider.map().values()) {
+            if (object != other) continue;
+            if (!object.canCollide()) continue;
+
+            Collider objectCollider = object.getCollider();
+            if (getCollider().isCollidingWith(objectCollider)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void doCollision(boolean collision) {
         hasCollision = collision;
     }
 
@@ -345,7 +379,7 @@ public abstract class GameObject {
         return renderLayer;
     }
 
-    public static HashMap<UUID, GameObject> list() {
+    public static HashMap<UUID, GameObject> map() {
         return objectMap;
     }
 
