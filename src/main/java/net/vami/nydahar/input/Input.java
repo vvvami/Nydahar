@@ -9,6 +9,8 @@ public class Input implements KeyListener {
     public boolean left;
     public boolean right;
 
+    public boolean space;
+
     @Override
     public void keyPressed(KeyEvent e) {
         switch (e.getKeyCode()) {
@@ -16,6 +18,7 @@ public class Input implements KeyListener {
             case KeyEvent.VK_S -> down = true;
             case KeyEvent.VK_A -> left = true;
             case KeyEvent.VK_D -> right = true;
+            case KeyEvent.VK_SPACE -> space = true;
         }
     }
 
@@ -26,6 +29,7 @@ public class Input implements KeyListener {
             case KeyEvent.VK_S -> down = false;
             case KeyEvent.VK_A -> left = false;
             case KeyEvent.VK_D -> right = false;
+            case KeyEvent.VK_SPACE -> space = false;
         }
     }
 

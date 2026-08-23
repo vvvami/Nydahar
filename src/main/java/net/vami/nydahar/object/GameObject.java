@@ -1,6 +1,7 @@
 package net.vami.nydahar.object;
 
 import net.vami.nydahar.game.World;
+import net.vami.nydahar.object.interaction.Direction;
 import net.vami.nydahar.object.interaction.collision.Collider;
 import net.vami.nydahar.object.entity.EntityObject;
 import net.vami.nydahar.object.entity.attribute.Attributes;
@@ -10,6 +11,7 @@ import net.vami.nydahar.render.sprite.Sprite;
 import net.vami.nydahar.render.sprite.SpriteAnimator;
 import net.vami.nydahar.util.AABB;
 import net.vami.nydahar.util.MathUtil;
+import net.vami.nydahar.util.Ray2;
 import net.vami.nydahar.util.Vec2;
 
 import java.util.Collection;
@@ -38,7 +40,9 @@ public abstract class GameObject {
     protected boolean hasCollision = true;
 
     protected boolean grounded = false;
+
     private double stepRenderOffset;
+    private double stepRenderStartY;
 
     protected double scale = 1;
 
@@ -62,19 +66,25 @@ public abstract class GameObject {
 
         if (pos == null) return;
 
+        grounded = false;
+
         prevPos.set(pos);
 
         if (hasGravity()) applyGravity(dt);
 
-        updateStepSmooth(dt);
-
         move(vel.x * dt, vel.y * dt);
+
+        updateStepSmooth(dt);
 
         if (hasDrag()) applyDrag(dt);
     }
 
     public double getStepRenderOffset() {
         return stepRenderOffset;
+    }
+
+    public double getStepRenderStartY() {
+        return stepRenderStartY;
     }
 
     private void applyDrag(double dt) {
@@ -93,46 +103,99 @@ public abstract class GameObject {
         vel.y = Math.min(vel.y, World.MAX_FALL_SPEED);
     }
 
+    private boolean checkGrounded(GameObject object) {
+        Collider collider = object.getCollider();
+
+        Vec2 origin1 = new Vec2(collider.maxX(), collider.maxY());
+        Vec2 origin2 = new Vec2(collider.minX(), collider.maxY());
+
+        return Ray2.cast(origin1, Vec2.DOWN, 0, object).isHit()
+                || Ray2.cast(origin2, Vec2.DOWN, 0, object).isHit();
+    }
+
     private void move(double dx, double dy) {
         moveX(dx);
         moveY(dy);
     }
 
-    private void moveX(double dx) {
-        if (dx == 0) return;
+    private void moveX(double vx) {
+        double remaining = vx;
 
-        pos.x += dx;
-        collider.update(this);
+        if (remaining == 0 || collider == null) return;
 
-        for (GameObject object : Collider.map().values()) {
-            if (!object.canCollide()) continue;
+        int safety = 0;
 
-            if (this instanceof EntityObject entity && object instanceof EntityObject otherEntity) {
-                if (!entity.canCollideWithOther() || !otherEntity.canCollideWithOther()) continue;
+        while (Math.abs(remaining) > 0.0001 && safety++ < 8) {
+            collider.update(this);
+
+            AABB box = collider.getBox();
+
+            Collider nearest = null;
+            double allowed = remaining;
+
+            for (GameObject object : Collider.map().values()) {
+                if (!object.canCollide()) continue;
+
+                if (this instanceof EntityObject entity
+                        && object instanceof EntityObject otherEntity) {
+
+                    if (!entity.canCollideWithOther()
+                            || !otherEntity.canCollideWithOther()) {
+                        continue;
+                    }
+                }
+
+                Collider other = object.getCollider();
+
+                if (other == null || other == collider) continue;
+
+                AABB otherBox = other.getBox();
+
+                boolean verticalOverlap = box.maxY() > otherBox.minY() && box.minY() < otherBox.maxY();
+                // player-maxY > floor-minY AND player-minY < floor-maxY
+                if (!verticalOverlap) {
+                    continue;
+                }
+
+                if (remaining > 0) {
+                    double gap = otherBox.minX() - box.maxX();
+
+                    if (gap >= 0 && gap <= allowed) {
+                        allowed = gap;
+                        nearest = other;
+                    }
+                } else {
+                    double gap = otherBox.maxX() - box.minX();
+
+                    if (gap <= 0 && gap >= allowed) {
+                        allowed = gap;
+                        nearest = other;
+                    }
+                }
             }
 
-            Collider other = object.getCollider();
-            if (other == null || other == collider) continue;
+            if (nearest == null) {
+                pos.x += remaining;
+                collider.update(this);
+                return;
+            }
 
-            if (!collider.isCollidingWith(other)) continue;
+            pos.x += allowed;
+            collider.update(this);
 
-            if (isGrounded() && autoStep(other)) {
+            remaining -= allowed;
+
+            if (checkGrounded(this) && vel.y >= 0 && autoStep(nearest)) {
                 continue;
             }
 
-            AABB box = collider.getBox();
-            AABB otherBox = other.getBox();
-
-            if (dx > 0) {
-                double pen = box.maxX() - otherBox.minX();
-                pos.x -= pen;
-            } else {
-                double pen = otherBox.maxX() - box.minX();
-                pos.x += pen;
-            }
+            stepRenderStartY = prevPos.y;
+            stepRenderOffset = 0;
 
             vel.x = 0;
             collider.update(this);
+
+            return;
         }
     }
 
@@ -140,12 +203,9 @@ public abstract class GameObject {
         AABB box = collider.getBox();
         AABB obstacleBox = obstacle.getBox();
 
-        double feetY = box.maxY();
-        double obstacleTop = obstacleBox.minY();
+        double stepHeight = box.maxY() - obstacleBox.minY();
 
-        double stepHeight = feetY - obstacleTop;
-        double autoStepHeight = this instanceof EntityObject entity ?
-                entity.attributes().get(Attributes.AUTO_STEP) : 0;
+        double autoStepHeight = this instanceof EntityObject entity ? entity.attributes().get(Attributes.AUTO_STEP) : 0;
 
         if (stepHeight <= 0 || stepHeight > autoStepHeight) return false;
 
@@ -160,8 +220,7 @@ public abstract class GameObject {
             return false;
         }
 
-        // for auto-step render smoothing
-        prevPos.y -= stepHeight;
+        stepRenderStartY = prevPos.y - stepHeight;
         stepRenderOffset += stepHeight;
 
         grounded = true;
@@ -173,17 +232,21 @@ public abstract class GameObject {
 
         if (Math.abs(stepRenderOffset) < 0.1) {
             stepRenderOffset = 0;
+            stepRenderStartY = Double.NaN;
         }
     }
 
-    private void moveY(double dy) {
-        if (dy == 0) return;
+    private void moveY(double vy) {
+        double remaining = vy;
 
-        pos.y += dy;
-
-        if (collider == null) return;
+        if (remaining == 0 || collider == null) return;
 
         collider.update(this);
+
+        AABB box = collider.getBox();
+
+        Collider nearest = null;
+        double allowed = remaining;
 
         for (GameObject object : Collider.map().values()) {
             if (!object.canCollide()) continue;
@@ -193,31 +256,43 @@ public abstract class GameObject {
             }
 
             Collider other = object.getCollider();
-            if (other == collider) continue;
 
-            if (!collider.isCollidingWith(other)) continue;
+            if (other == null || other == collider) continue;
 
-            AABB box = collider.getBox();
             AABB otherBox = other.getBox();
 
-            double pen;
+            boolean horizontalOverlap = box.maxX() > otherBox.minX() && box.minX() < otherBox.maxX();
 
-            if (dy > 0) {
-                pen = (box.y + box.height) - otherBox.y;
-                pos.y -= pen;
+            if (!horizontalOverlap) continue;
 
-                grounded = true;
+            if (remaining > 0) {
+                double gap = otherBox.minY() - box.maxY();
+
+                if (gap >= 0 && gap <= allowed) {
+                    allowed = gap;
+                    nearest = other;
+                }
             }
             else {
-                pen = (otherBox.y + otherBox.height) - box.y;
-                pos.y += pen;
+                double gap = otherBox.maxY() - box.minY();
 
-                grounded = false;
+                if (gap <= 0 && gap >= allowed) {
+                    allowed = gap;
+                    nearest = other;
+                }
             }
-
-            vel.y = 0;
-            collider.update(this);
         }
+
+        if (nearest == null) {
+            pos.y += remaining;
+            collider.update(this);
+            return;
+        }
+
+        pos.y += allowed;
+        collider.update(this);
+        grounded = remaining > 0;
+        vel.y = 0;
     }
 
     public void setPos(double x, double y) {
@@ -263,6 +338,14 @@ public abstract class GameObject {
 
     public Vec2 getVel() {
         return vel;
+    }
+
+    public Direction getHrzDirection() {
+        if (vel.x > 0) return Direction.RIGHT;
+
+        else if (vel.x < 0) return Direction.LEFT;
+
+        return Direction.NONE;
     }
 
     public boolean isGrounded() {

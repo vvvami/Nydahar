@@ -55,6 +55,14 @@ public class Collider {
         return collisionBox.y;
     }
 
+    public double getCenterX() {
+        return collisionBox.getX() + collisionBox.getWidth() / 2;
+    }
+
+    public double getCenterY() {
+        return collisionBox.getY() + collisionBox.getWidth() / 2;
+    }
+
     public void setX(double x) {
         collisionBox.x = x;
     }

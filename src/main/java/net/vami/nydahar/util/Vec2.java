@@ -55,4 +55,14 @@ public class Vec2 {
             multiply(maxLength);
         }
     }
+
+    public boolean zeroed() {
+        return x == 0 && y == 0;
+    }
+
+    public static Vec2 DOWN = new Vec2(0,1);
+    public static Vec2 UP = new Vec2(0,-1);
+    public static Vec2 LEFT = new Vec2(-1,0);
+    public static Vec2 RIGHT = new Vec2(1,0);
+
 }

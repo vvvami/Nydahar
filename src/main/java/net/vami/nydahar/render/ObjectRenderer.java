@@ -1,13 +1,18 @@
 package net.vami.nydahar.render;
 
 import net.vami.nydahar.object.GameObject;
+import net.vami.nydahar.object.entity.EntityObject;
+import net.vami.nydahar.object.interaction.collision.Collider;
 import net.vami.nydahar.render.sprite.Sprite;
 import net.vami.nydahar.util.MathUtil;
+import net.vami.nydahar.util.Ray2;
 import net.vami.nydahar.util.Vec2;
 
 import java.awt.*;
 
 public class ObjectRenderer {
+
+    private static final BasicStroke STROKE = new BasicStroke(3);
 
     public void render(Graphics2D g, GameObject gameObject, double alpha) {
         Sprite sprite = gameObject.getSprite();
@@ -19,9 +24,12 @@ public class ObjectRenderer {
         if (pos == null) return;
 
         double x = MathUtil.lerp(prevPos.x, pos.x, alpha);
-        double y = MathUtil.lerp(prevPos.y, pos.y, alpha);
 
-        y += gameObject.getStepRenderOffset(); // smooth autostepping
+        double prevY = !Double.isNaN(gameObject.getStepRenderStartY()) ? gameObject.getStepRenderStartY() : prevPos.y;
+
+        double currentY = pos.y + gameObject.getStepRenderOffset();
+        double y = MathUtil.lerp(prevY, currentY, alpha);
+
 
         int width = (int) Math.round(gameObject.getScaledWidth());
         int height = (int) Math.round(gameObject.getScaledHeight());
@@ -33,5 +41,29 @@ public class ObjectRenderer {
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 
         g.drawImage(sprite.image(), drawX, drawY, width, height, null);
+
+        Collider collider = gameObject.getCollider();
+        g.setColor(Color.red);
+        g.setStroke(STROKE);
+        g.drawRect((int) collider.getX(), (int) collider.getY(),
+                (int) collider.getWidth(), (int) collider.getHeight());
+
+
+        if (!(gameObject instanceof EntityObject)) return;
+
+        g.setColor(Color.yellow);
+
+        if (gameObject.isGrounded()) {
+            g.drawRect(drawX, drawY,
+                    (int) gameObject.getScaledWidth(), (int) gameObject.getScaledHeight());
+        }
+
+        Vec2 origin = new Vec2(collider.getCenterX(), collider.getCenterY());
+        Vec2 point = Ray2.cast(origin, Vec2.DOWN, 100, gameObject).getPoint();
+        if (point != null) {
+            g.drawLine((int) collider.getCenterX(), (int) collider.getCenterY(),
+                    (int) point.x, (int) point.y);
+        }
+
     }
 }

@@ -28,39 +28,26 @@ public class SpriteManager {
                     .getClassLoader()
                     .getResource("assets");
 
-            if (assetsUrl == null) {
-                throw new IllegalStateException(
-                        "Could not find assets folder"
-                );
-            }
+            if (assetsUrl == null) throw new IllegalStateException("Could not find assets folder");
+
 
             switch (assetsUrl.getProtocol()) {
                 case "file" -> loadFromDirectory(assetsUrl);
                 case "jar" -> loadFromJar(assetsUrl);
 
-                default -> throw new IllegalStateException(
-                        "Unsupported asset protocol: "
-                                + assetsUrl.getProtocol()
-                );
+                default -> throw new IllegalStateException("Unsupported asset protocol: " + assetsUrl.getProtocol());
             }
 
-            System.out.println(
-                    "Loaded " + sprites.size() + " sprites."
-            );
+            System.out.println("Loaded " + sprites.size() + " sprites");
 
         } catch (Exception e) {
-            throw new RuntimeException(
-                    "Failed to load sprites",
-                    e
-            );
+            throw new RuntimeException("Failed to load sprites", e);
         }
     }
 
     private void register(String key, BufferedImage image) {
         if (sprites.containsKey(key)) {
-            throw new IllegalArgumentException(
-                    "Sprite already registered: " + key
-            );
+            throw new IllegalArgumentException("Sprite already registered: " + key);
         }
 
         Sprite sprite = new Sprite(key, image);
@@ -71,11 +58,7 @@ public class SpriteManager {
     public Sprite get(String key) {
         Sprite sprite = sprites.get(key);
 
-        if (sprite == null) {
-            throw new IllegalArgumentException(
-                    "Unknown sprite: " + key
-            );
-        }
+        if (sprite == null) throw new IllegalArgumentException("Unknown sprite: " + key);
 
         return sprite;
     }
@@ -141,10 +124,7 @@ public class SpriteManager {
                                      .getClassLoader()
                                      .getResourceAsStream(name)) {
 
-                    if (stream == null) {
-                        throw new IOException(
-                                "Could not open sprite: " + name);
-                    }
+                    if (stream == null) throw new IOException("Could not open sprite: " + name);
 
                     BufferedImage image = ImageIO.read(stream);
                     register(key, image);
