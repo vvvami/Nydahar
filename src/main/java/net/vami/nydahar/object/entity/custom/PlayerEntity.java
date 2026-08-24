@@ -22,7 +22,7 @@ public class PlayerEntity extends EntityObject {
         drag = 600;
 
         setCollider(new Collider(this,
-                0.3, 0.2, 0.7, 1));
+                0.3, 0.8, 0.7, 0));
     }
 
     public void inputTick(double dt, Input input) {
@@ -45,40 +45,34 @@ public class PlayerEntity extends EntityObject {
 
         if (direction > 0) {
             if (vel.x < speed) {
-                vel.x = Math.min(
-                        speed,
-                        vel.x + acceleration
-                );
+                vel.x = Math.min(speed, vel.x + acceleration);
             }
         }
         else if (direction < 0) {
             if (vel.x > -speed) {
-                vel.x = Math.max(
-                        -speed,
-                        vel.x - acceleration
-                );
+                vel.x = Math.max(-speed, vel.x - acceleration);
             }
         }
 
         if (input.up && isGrounded()) {
             double jumpStrength = attributes.get(Attributes.JUMP);
 
-            push(0, -jumpStrength);
+            push(0, jumpStrength);
             grounded = false;
         }
 
         if (input.down && !isGrounded()) {
-            push(0, 50);
+            push(0, -50);
         }
 
         if (input.space && dashCooldown <= 0) {
             dashCooldown = 30;
             switch (getHrzDirection()) {
-                case LEFT -> push(-350, -10);
-                case RIGHT -> push(350, -10);
+                case LEFT -> push(-350, 10);
+                case RIGHT -> push(350, 10);
                 default -> {
                     if (upDash) {
-                        push(0, -300);
+                        push(0, 300);
                         upDash = false;
                     }
                 }

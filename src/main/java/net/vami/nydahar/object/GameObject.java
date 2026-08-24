@@ -42,7 +42,7 @@ public abstract class GameObject {
     protected boolean grounded = false;
 
     private double stepRenderOffset;
-    private double stepRenderStartY;
+    private double prevStepRenderOffset;
 
     protected double scale = 1;
 
@@ -69,6 +69,7 @@ public abstract class GameObject {
         grounded = false;
 
         prevPos.set(pos);
+        prevStepRenderOffset = stepRenderOffset;
 
         if (hasGravity()) applyGravity(dt);
 
@@ -77,14 +78,6 @@ public abstract class GameObject {
         updateStepSmooth(dt);
 
         if (hasDrag()) applyDrag(dt);
-    }
-
-    public double getStepRenderOffset() {
-        return stepRenderOffset;
-    }
-
-    public double getStepRenderStartY() {
-        return stepRenderStartY;
     }
 
     private void applyDrag(double dt) {
@@ -98,16 +91,16 @@ public abstract class GameObject {
     }
 
     private void applyGravity(double dt) {
-        accelerate(0, World.GRAVITY, dt);
+        accelerate(0, -World.GRAVITY, dt);
 
-        vel.y = Math.min(vel.y, World.MAX_FALL_SPEED);
+        vel.y = Math.max(vel.y, -World.MAX_FALL_SPEED);
     }
 
     private boolean checkGrounded(GameObject object) {
         Collider collider = object.getCollider();
 
-        Vec2 origin1 = new Vec2(collider.maxX(), collider.maxY());
-        Vec2 origin2 = new Vec2(collider.minX(), collider.maxY());
+        Vec2 origin1 = new Vec2(collider.maxX(), collider.minY());
+        Vec2 origin2 = new Vec2(collider.minX(), collider.minY());
 
         return Ray2.cast(origin1, Vec2.DOWN, 0, object).isHit()
                 || Ray2.cast(origin2, Vec2.DOWN, 0, object).isHit();
@@ -136,13 +129,8 @@ public abstract class GameObject {
             for (GameObject object : Collider.map().values()) {
                 if (!object.canCollide()) continue;
 
-                if (this instanceof EntityObject entity
-                        && object instanceof EntityObject otherEntity) {
-
-                    if (!entity.canCollideWithOther()
-                            || !otherEntity.canCollideWithOther()) {
-                        continue;
-                    }
+                if (this instanceof EntityObject entity && object instanceof EntityObject otherEntity) {
+                    if (!entity.canCollideWithOther() || !otherEntity.canCollideWithOther()) continue;
                 }
 
                 Collider other = object.getCollider();
@@ -153,9 +141,7 @@ public abstract class GameObject {
 
                 boolean verticalOverlap = box.maxY() > otherBox.minY() && box.minY() < otherBox.maxY();
                 // player-maxY > floor-minY AND player-minY < floor-maxY
-                if (!verticalOverlap) {
-                    continue;
-                }
+                if (!verticalOverlap) continue;
 
                 if (remaining > 0) {
                     double gap = otherBox.minX() - box.maxX();
@@ -185,12 +171,9 @@ public abstract class GameObject {
 
             remaining -= allowed;
 
-            if (checkGrounded(this) && vel.y >= 0 && autoStep(nearest)) {
+            if (checkGrounded(this) && vel.y <= 0 && autoStep(nearest)) {
                 continue;
             }
-
-            stepRenderStartY = prevPos.y;
-            stepRenderOffset = 0;
 
             vel.x = 0;
             collider.update(this);
@@ -203,7 +186,7 @@ public abstract class GameObject {
         AABB box = collider.getBox();
         AABB obstacleBox = obstacle.getBox();
 
-        double stepHeight = box.maxY() - obstacleBox.minY();
+        double stepHeight = obstacleBox.maxY() - box.minY();
 
         double autoStepHeight = this instanceof EntityObject entity ? entity.attributes().get(Attributes.AUTO_STEP) : 0;
 
@@ -211,7 +194,7 @@ public abstract class GameObject {
 
         double oldY = pos.y;
 
-        pos.y -= stepHeight;
+        pos.y += stepHeight;
         collider.update(this);
 
         if (isColliding()) {
@@ -220,8 +203,7 @@ public abstract class GameObject {
             return false;
         }
 
-        stepRenderStartY = prevPos.y - stepHeight;
-        stepRenderOffset += stepHeight;
+        stepRenderOffset -= stepHeight;
 
         grounded = true;
         return true;
@@ -230,23 +212,27 @@ public abstract class GameObject {
     private void updateStepSmooth(double dt) {
         stepRenderOffset = MathUtil.lerp(stepRenderOffset, 0, 1.0 - Math.exp(-8.0 * dt));
 
-        if (Math.abs(stepRenderOffset) < 0.1) {
-            stepRenderOffset = 0;
-            stepRenderStartY = Double.NaN;
-        }
+        if (Math.abs(stepRenderOffset) < 0.1) stepRenderOffset = 0;
+    }
+
+    public double getStepRenderOffset() {
+        return stepRenderOffset;
+    }
+
+    public double getPrevStepRenderOffset() {
+        return prevStepRenderOffset;
     }
 
     private void moveY(double vy) {
-        double remaining = vy;
 
-        if (remaining == 0 || collider == null) return;
+        if (vy == 0 || collider == null) return;
 
         collider.update(this);
 
         AABB box = collider.getBox();
 
         Collider nearest = null;
-        double allowed = remaining;
+        double allowed = vy;
 
         for (GameObject object : Collider.map().values()) {
             if (!object.canCollide()) continue;
@@ -265,7 +251,7 @@ public abstract class GameObject {
 
             if (!horizontalOverlap) continue;
 
-            if (remaining > 0) {
+            if (vy > 0) {
                 double gap = otherBox.minY() - box.maxY();
 
                 if (gap >= 0 && gap <= allowed) {
@@ -284,14 +270,15 @@ public abstract class GameObject {
         }
 
         if (nearest == null) {
-            pos.y += remaining;
+            pos.y += vy;
             collider.update(this);
             return;
         }
 
         pos.y += allowed;
         collider.update(this);
-        grounded = remaining > 0;
+
+        grounded = vy <= 0;
         vel.y = 0;
     }
 

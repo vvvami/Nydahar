@@ -8,9 +8,9 @@ import java.util.Map;
 
 public class Collider {
     private double left = 0;
-    private double top = 0;
+    private double top = 1;
     private double right = 1;
-    private double bottom = 1;
+    private double bottom = 0;
 
     private AABB collisionBox;
 
@@ -32,7 +32,7 @@ public class Collider {
     }
 
     public Collider(GameObject object) {
-        this(object, 0, 0, 1, 1);
+        this(object, 0, 1, 1, 0);
         update(object);
     }
 
@@ -119,9 +119,9 @@ public class Collider {
         double width = object.getScaledWidth();
         double height = object.getScaledHeight();
 
-        this.collisionBox.x = (object.getPos().x + width * left - width / 2);
-        this.collisionBox.y = (object.getPos().y + height * top - height / 2);
-        this.collisionBox.width = (width * (right - left));
-        this.collisionBox.height = (height * (bottom - top));
+        this.collisionBox.x = object.getPos().x + width * left - width / 2;
+        this.collisionBox.y = object.getPos().y + height * bottom - height / 2;
+        this.collisionBox.width = width * (right - left);
+        this.collisionBox.height = height * (top - bottom);
     }
 }

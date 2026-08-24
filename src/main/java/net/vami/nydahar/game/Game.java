@@ -12,6 +12,7 @@ import net.vami.nydahar.render.SpriteManager;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferStrategy;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Comparator;
 
@@ -59,14 +60,14 @@ public class Game implements Runnable {
     public void run() {
         RegistryBootstrap.register(); // register everything
 
-        player = Entities.PLAYER.create(100,0);
-        Entities.WOLF.create(400, 200);
+        player = Entities.PLAYER.create(100,500);
+        Entities.WOLF.create(400, 500);
         for (int i = 0; i < 128; i += 16) {
-            Tiles.BLACK_FLOOR.create(100 + i, 400 - i, "black_floor");
+            Tiles.BLACK_FLOOR.create(500 + i, 200 + i, "black_floor");
         }
 
-        for (int i = 0; i < 512; i += 16) {
-            Tiles.BLACK_FLOOR.create(200 + i, 272, "black_floor");
+        for (int i = 0; i < 1024; i += 16) {
+            Tiles.BLACK_FLOOR.create(100 + i, 272, "black_floor");
         }
 
         // create buffers for rendering
@@ -185,6 +186,11 @@ public class Game implements Runnable {
         g.setColor(Color.black);
         g.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
 
+        // now we convert the whole render so that Y > 0 means UP
+        // conversely, Y < 0 means DOWN
+        g.translate(0, canvas.getHeight());
+        g.scale(1, -1);
+
         // rendering
         ArrayList<GameObject> objects = new ArrayList<>(GameObject.objects());
         objects.sort(Comparator.comparing(GameObject::getRenderLayer));
@@ -197,6 +203,28 @@ public class Game implements Runnable {
         // dispose graphics and show next drawn buffer
         g.dispose();
         bs.show();
+    }
+
+    public static void drawImage(Graphics2D g, BufferedImage image, double x, double y, double width, double height) {
+        Graphics2D graphics = (Graphics2D) g.create();
+
+        graphics.translate(x, y + height);
+        graphics.scale(1, -1);
+
+        graphics.drawImage(image, 0, 0, (int) width, (int) height, null);
+
+        graphics.dispose();
+    }
+
+    public static void drawString(Graphics2D g, String text, double x, double y) {
+        Graphics2D graphics = (Graphics2D) g.create();
+
+        graphics.translate(x, y);
+        graphics.scale(1, -1);
+
+        graphics.drawString(text, 0, 0);
+
+        graphics.dispose();
     }
 
     public SpriteManager sprites() {

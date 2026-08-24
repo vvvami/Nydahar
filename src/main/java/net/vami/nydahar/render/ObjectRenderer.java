@@ -1,5 +1,6 @@
 package net.vami.nydahar.render;
 
+import net.vami.nydahar.game.Game;
 import net.vami.nydahar.object.GameObject;
 import net.vami.nydahar.object.entity.EntityObject;
 import net.vami.nydahar.object.interaction.collision.Collider;
@@ -8,6 +9,7 @@ import net.vami.nydahar.util.MathUtil;
 import net.vami.nydahar.util.Ray2;
 import net.vami.nydahar.util.Vec2;
 
+import javax.swing.text.StyleConstants;
 import java.awt.*;
 
 public class ObjectRenderer {
@@ -24,12 +26,10 @@ public class ObjectRenderer {
         if (pos == null) return;
 
         double x = MathUtil.lerp(prevPos.x, pos.x, alpha);
+        double y = MathUtil.lerp(prevPos.y, pos.y, alpha);
 
-        double prevY = !Double.isNaN(gameObject.getStepRenderStartY()) ? gameObject.getStepRenderStartY() : prevPos.y;
-
-        double currentY = pos.y + gameObject.getStepRenderOffset();
-        double y = MathUtil.lerp(prevY, currentY, alpha);
-
+        double stepYOffset = MathUtil.lerp(gameObject.getPrevStepRenderOffset(), gameObject.getStepRenderOffset(), alpha);
+        y += stepYOffset;
 
         int width = (int) Math.round(gameObject.getScaledWidth());
         int height = (int) Math.round(gameObject.getScaledHeight());
@@ -40,7 +40,7 @@ public class ObjectRenderer {
 
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 
-        g.drawImage(sprite.image(), drawX, drawY, width, height, null);
+        Game.drawImage(g, sprite.image(), drawX, drawY, width, height);
 
         Collider collider = gameObject.getCollider();
         g.setColor(Color.red);
@@ -64,6 +64,5 @@ public class ObjectRenderer {
             g.drawLine((int) collider.getCenterX(), (int) collider.getCenterY(),
                     (int) point.x, (int) point.y);
         }
-
     }
 }
