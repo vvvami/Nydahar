@@ -3,6 +3,7 @@ package net.vami.nydahar.game;
 import net.vami.nydahar.input.Input;
 import net.vami.nydahar.object.entity.custom.PlayerEntity;
 import net.vami.nydahar.object.GameObject;
+import net.vami.nydahar.object.interaction.damage.Hitbox;
 import net.vami.nydahar.registry.RegistryBootstrap;
 import net.vami.nydahar.registry.custom.Entities;
 import net.vami.nydahar.registry.custom.Tiles;
@@ -49,6 +50,8 @@ public class Game implements Runnable {
         canvas = new Canvas();
         canvas.setPreferredSize(new Dimension(800, 600));
         canvas.addKeyListener(input);
+        canvas.addMouseListener(input);
+        canvas.addMouseMotionListener(input);
         canvas.setFocusable(true);
         canvas.requestFocus();
 
@@ -182,6 +185,11 @@ public class Game implements Runnable {
         for (GameObject gameObject : GameObject.objects()) {
             gameObject.update(dt);
         }
+
+        for (Hitbox hitbox : Hitbox.map().keySet()) {
+            hitbox.update(dt);
+        }
+        Hitbox.map().keySet().removeIf(Hitbox::isFinished);
     }
 
     private void render(double alpha) {
@@ -239,6 +247,14 @@ public class Game implements Runnable {
         graphics.drawString(text, 0, 0);
 
         graphics.dispose();
+    }
+
+    public Camera getCamera() {
+        return camera;
+    }
+
+    public Canvas getCanvas() {
+        return canvas;
     }
 
     public SpriteManager sprites() {

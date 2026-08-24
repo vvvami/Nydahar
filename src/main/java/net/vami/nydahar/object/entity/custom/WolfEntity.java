@@ -17,12 +17,6 @@ public class WolfEntity extends EntityObject {
     @Override
     public void update(double dt) {
         super.update(dt);
-
-        count++;
-
-        if (count % Game.TPS == 0) {
-            hurt(new HurtSource(new DamageType()), 1);
-        }
     }
 
     @Override

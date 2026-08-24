@@ -363,6 +363,10 @@ public abstract class GameObject {
         doGravity(false);
     }
 
+    public UUID getUUID() {
+        return uuid;
+    }
+
     public Collider getCollider() {
         return collider;
     }
