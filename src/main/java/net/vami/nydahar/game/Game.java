@@ -6,8 +6,10 @@ import net.vami.nydahar.object.GameObject;
 import net.vami.nydahar.registry.RegistryBootstrap;
 import net.vami.nydahar.registry.custom.Entities;
 import net.vami.nydahar.registry.custom.Tiles;
+import net.vami.nydahar.render.Camera;
 import net.vami.nydahar.render.ObjectRenderer;
 import net.vami.nydahar.render.SpriteManager;
+import net.vami.nydahar.util.MathUtil;
 
 import javax.swing.*;
 import java.awt.*;
@@ -22,6 +24,8 @@ public class Game implements Runnable {
     private final JFrame frame;
     private final Canvas canvas;
     private Thread thread;
+
+    private Camera camera = new Camera();
 
     public static final int TPS = 60;
     private final int FPS = 60;
@@ -170,6 +174,9 @@ public class Game implements Runnable {
     }
 
     private void update(double dt) {
+
+        camera.update(player, dt);
+
         player.inputTick(dt, input);
 
         for (GameObject gameObject : GameObject.objects()) {
@@ -179,28 +186,35 @@ public class Game implements Runnable {
 
     private void render(double alpha) {
         BufferStrategy bs = canvas.getBufferStrategy();
-
         Graphics2D g = (Graphics2D) bs.getDrawGraphics();
 
-        // clear the scene
-        g.setColor(Color.black);
+        g.setColor(Color.BLACK);
         g.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
 
-        // now we convert the whole render so that Y > 0 means UP
-        // conversely, Y < 0 means DOWN
-        g.translate(0, canvas.getHeight());
-        g.scale(1, -1);
+        Graphics2D worldG = (Graphics2D) g.create();
 
-        // rendering
+        double camX = MathUtil.lerp(camera.getPrevPos().x, camera.getPos().x, alpha);
+        double camY = MathUtil.lerp(camera.getPrevPos().y, camera.getPos().y, alpha);
+
+        worldG.translate(canvas.getWidth() / 2d, canvas.getHeight() / 2d);
+
+        worldG.scale(1, -1);
+
+        worldG.translate(-camX, -camY);
+
         ArrayList<GameObject> objects = new ArrayList<>(GameObject.objects());
         objects.sort(Comparator.comparing(GameObject::getRenderLayer));
 
         for (GameObject object : objects) {
             if (!object.hasSprite()) continue;
-            spriteRenderer.render(g, object, alpha);
+
+            spriteRenderer.render(worldG, object, alpha);
         }
 
-        // dispose graphics and show next drawn buffer
+        worldG.dispose();
+
+        // draw hud down HERE using g:
+
         g.dispose();
         bs.show();
     }

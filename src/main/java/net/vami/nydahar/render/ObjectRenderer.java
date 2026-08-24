@@ -42,11 +42,11 @@ public class ObjectRenderer {
 
         Game.drawImage(g, sprite.image(), drawX, drawY, width, height);
 
-        Collider collider = gameObject.getCollider();
-        g.setColor(Color.red);
+//        Collider collider = gameObject.getCollider();
+//        g.setColor(Color.red);
         g.setStroke(STROKE);
-        g.drawRect((int) collider.getX(), (int) collider.getY(),
-                (int) collider.getWidth(), (int) collider.getHeight());
+//        g.drawRect((int) collider.getX(), (int) collider.getY(),
+//                (int) collider.getWidth(), (int) collider.getHeight());
 
 
         if (!(gameObject instanceof EntityObject)) return;
@@ -58,11 +58,11 @@ public class ObjectRenderer {
                     (int) gameObject.getScaledWidth(), (int) gameObject.getScaledHeight());
         }
 
-        Vec2 origin = new Vec2(collider.getCenterX(), collider.getCenterY());
-        Vec2 point = Ray2.cast(origin, Vec2.DOWN, 100, gameObject).getPoint();
-        if (point != null) {
-            g.drawLine((int) collider.getCenterX(), (int) collider.getCenterY(),
-                    (int) point.x, (int) point.y);
-        }
+//        Vec2 origin = new Vec2(collider.getCenterX(), collider.getCenterY());
+//        Vec2 point = Ray2.cast(origin, Vec2.DOWN, 100, gameObject).getPoint();
+//        if (point != null) {
+//            g.drawLine((int) collider.getCenterX(), (int) collider.getCenterY(),
+//                    (int) point.x, (int) point.y);
+//        }
     }
 }

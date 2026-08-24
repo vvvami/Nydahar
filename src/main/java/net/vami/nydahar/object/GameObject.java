@@ -203,7 +203,7 @@ public abstract class GameObject {
             return false;
         }
 
-        stepRenderOffset -= stepHeight;
+        stepRenderOffset -= stepHeight / 1.5; // optimal smoothing w/o being too much in the collider below
 
         grounded = true;
         return true;
