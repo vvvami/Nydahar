@@ -17,6 +17,8 @@ public class PlayerEntity extends EntityObject {
     private boolean upDash = true;
 
     private int attackCooldown = 0;
+    private int comboIndex = 0;
+    private int comboTimer = 0;
 
     private Direction direction;
 
@@ -96,9 +98,10 @@ public class PlayerEntity extends EntityObject {
         double dx = mouseWorldX - this.getPos().x;
         double dy = mouseWorldY - this.getPos().y;
 
-        if (input.left_click_pressed && attackCooldown == 0) {
+        if (input.left_click_pressed) {
             input.left_click_pressed = false;
 
+            if (attackCooldown > 0) return;
             attackCooldown = 20;
 
             if (Math.abs(dx) > Math.abs(dy)) {
@@ -108,19 +111,52 @@ public class PlayerEntity extends EntityObject {
             }
 
             switch (direction) {
-                case LEFT, RIGHT -> sideSweepAttack(75, 50);
+                case LEFT, RIGHT -> sideSweepAttack();
                 case UP -> topAttack(50, 75);
                 case DOWN -> downAttack(50, 75);
             }
         }
 
         if (attackCooldown > 0) attackCooldown--;
+        if (comboTimer > 0) {
+            comboTimer--;
+            if (comboTimer == 0) {
+                comboIndex = 0;
+            }
+        }
     }
 
-    public void sideSweepAttack(double width, double height) {
+    public void sideSweepAttack() {
+        switch (comboIndex) {
+            case 0 -> sideAttack1(75, 50);
+            case 1 -> sideAttack2(75, 50);
+            case 2 -> sideAttack3(75, 50);
+        }
+
+        comboIndex = (comboIndex + 1) % 3;
+        comboTimer = 60;
+    }
+
+    public void sideAttack1(double width, double height) {
         Attack.hit(this, width, height, 5, 0.25).directional().fromTo(
                 new Vec2(0, this.getScaledHeight()),
                 new Vec2(0, 0),
+                5
+        );
+    }
+
+    public void sideAttack2(double width, double height) {
+        Attack.hit(this, width, height, 5, 0.25).directional().fromTo(
+                new Vec2(0, 0),
+                new Vec2(0, this.getScaledHeight()),
+                5
+        );
+    }
+
+    public void sideAttack3(double width, double height) {
+        Attack.hit(this, width, height, 5, 0.25).fromTo(
+                new Vec2(this.getScaledWidth() / 2 * direction.get().x, 0),
+                new Vec2(this.getScaledWidth() * direction.get().x, 0),
                 5
         );
     }
