@@ -14,6 +14,8 @@ public abstract class EntityObject extends GameObject {
 
     protected double health;
 
+    protected double iframes;
+
     public EntityObject(double x, double y) {
         super(x, y);
         initAttributes();
@@ -25,13 +27,18 @@ public abstract class EntityObject extends GameObject {
     public void update(double dt) {
         super.update(dt);
 
+        if (iframes > 0) iframes--;
+
         if (isDead() && pos != null) {
             remove();
         }
     }
 
     public void hurt(HurtSource hurtSource, double amount) {
+        if (iframes > 0) return;
+
         this.setHealth(getHealth() - amount);
+        iframes += 30;
     }
 
     public void hurt(DamageType type, double amount) {

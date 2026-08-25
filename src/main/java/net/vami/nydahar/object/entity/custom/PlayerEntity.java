@@ -14,8 +14,9 @@ public class PlayerEntity extends EntityObject {
     public static final double ACCELERATION = 1000;
 
     private int dashCooldown = 0;
-
     private boolean upDash = true;
+
+    private int attackCooldown = 0;
 
     private Direction direction;
 
@@ -85,7 +86,7 @@ public class PlayerEntity extends EntityObject {
             }
         }
 
-        dashCooldown--;
+        if (dashCooldown > 0) dashCooldown--;
 
         Game instance = Game.getInstance();
 
@@ -95,8 +96,10 @@ public class PlayerEntity extends EntityObject {
         double dx = mouseWorldX - this.getPos().x;
         double dy = mouseWorldY - this.getPos().y;
 
-        if (input.left_click_pressed) {
+        if (input.left_click_pressed && attackCooldown == 0) {
             input.left_click_pressed = false;
+
+            attackCooldown = 20;
 
             if (Math.abs(dx) > Math.abs(dy)) {
                 this.direction = dx < 0 ? Direction.LEFT : Direction.RIGHT;
@@ -104,14 +107,36 @@ public class PlayerEntity extends EntityObject {
                 this.direction = dy < 0 ? Direction.DOWN : Direction.UP;
             }
 
-            attack(50, 50);
+            switch (direction) {
+                case LEFT, RIGHT -> sideSweepAttack(75, 50);
+                case UP -> topAttack(50, 75);
+                case DOWN -> downAttack(50, 75);
+            }
         }
+
+        if (attackCooldown > 0) attackCooldown--;
     }
 
-    public void attack(double width, double height) {
+    public void sideSweepAttack(double width, double height) {
         Attack.hit(this, width, height, 5, 0.25).directional().fromTo(
                 new Vec2(0, this.getScaledHeight()),
                 new Vec2(0, 0),
+                5
+        );
+    }
+
+    public void topAttack(double width, double height) {
+        Attack.hit(this, width, height, 5, 0.25).fromTo(
+                new Vec2(0, this.getScaledHeight()),
+                new Vec2(0, this.getScaledHeight() * 1.5),
+                5
+        );
+    }
+
+    public void downAttack(double width, double height) {
+        Attack.hit(this, width, height, 5, 0.25).fromTo(
+                new Vec2(0, -this.getScaledHeight()),
+                new Vec2(0, -this.getScaledHeight() * 1.5),
                 5
         );
     }

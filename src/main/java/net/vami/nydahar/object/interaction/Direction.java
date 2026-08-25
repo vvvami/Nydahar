@@ -17,4 +17,8 @@ public enum Direction {
     public Vec2 get() {
         return vec;
     }
+
+    public boolean isHorizontal() {
+        return this == LEFT || this == RIGHT;
+    }
 }
