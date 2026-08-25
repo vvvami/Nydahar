@@ -60,7 +60,7 @@ public class Collider {
     }
 
     public double getCenterY() {
-        return collisionBox.getY() + collisionBox.getWidth() / 2;
+        return collisionBox.getY() + collisionBox.getHeight() / 2;
     }
 
     public void setX(double x) {

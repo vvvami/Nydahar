@@ -3,7 +3,7 @@ package net.vami.nydahar.game;
 import net.vami.nydahar.input.Input;
 import net.vami.nydahar.object.entity.custom.PlayerEntity;
 import net.vami.nydahar.object.GameObject;
-import net.vami.nydahar.object.interaction.damage.Hitbox;
+import net.vami.nydahar.object.interaction.damage.Attack;
 import net.vami.nydahar.registry.RegistryBootstrap;
 import net.vami.nydahar.registry.custom.Entities;
 import net.vami.nydahar.registry.custom.Tiles;
@@ -186,10 +186,10 @@ public class Game implements Runnable {
             gameObject.update(dt);
         }
 
-        for (Hitbox hitbox : Hitbox.map().keySet()) {
-            hitbox.update(dt);
+        for (Attack attack : Attack.map().keySet()) {
+            attack.update(dt);
         }
-        Hitbox.map().keySet().removeIf(Hitbox::isFinished);
+        Attack.map().keySet().removeIf(Attack::isFinished);
     }
 
     private void render(double alpha) {

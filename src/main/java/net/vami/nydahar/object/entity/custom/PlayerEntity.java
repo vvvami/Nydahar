@@ -6,8 +6,9 @@ import net.vami.nydahar.object.interaction.Direction;
 import net.vami.nydahar.object.interaction.collision.Collider;
 import net.vami.nydahar.object.entity.EntityObject;
 import net.vami.nydahar.object.entity.attribute.Attributes;
-import net.vami.nydahar.object.interaction.damage.Hitbox;
+import net.vami.nydahar.object.interaction.damage.Attack;
 import net.vami.nydahar.render.sprite.Sprites;
+import net.vami.nydahar.util.Vec2;
 
 public class PlayerEntity extends EntityObject {
     public static final double ACCELERATION = 1000;
@@ -55,11 +56,15 @@ public class PlayerEntity extends EntityObject {
             }
         }
 
-        if (input.up && isGrounded()) {
-            double jumpStrength = attributes.get(Attributes.JUMP);
+        if (input.up_down) {
+            direction = Direction.UP;
 
-            push(0, jumpStrength);
-            grounded = false;
+            if (isGrounded()) {
+                double jumpStrength = attributes.get(Attributes.JUMP);
+
+                push(0, jumpStrength);
+                grounded = false;
+            }
         }
 
         if (input.down && !isGrounded()) {
@@ -69,8 +74,8 @@ public class PlayerEntity extends EntityObject {
         if (input.space && dashCooldown <= 0) {
             dashCooldown = 30;
             switch (getHrzDirection()) {
-                case LEFT -> push(-350, 10);
-                case RIGHT -> push(350, 10);
+                case Direction.LEFT -> push(-350, 10);
+                case Direction.RIGHT -> push(350, 10);
                 default -> {
                     if (upDash) {
                         push(0, 300);
@@ -90,22 +95,25 @@ public class PlayerEntity extends EntityObject {
         double dx = mouseWorldX - this.getPos().x;
         double dy = mouseWorldY - this.getPos().y;
 
-        if (Math.abs(dx) > Math.abs(dy)) {
-            this.direction = dx < 0 ? Direction.LEFT : Direction.RIGHT;
-
-        } else {
-            this.direction = dy < 0 ? Direction.DOWN : Direction.UP;
-        }
-
         if (input.left_click_pressed) {
             input.left_click_pressed = false;
 
-            attack(100, 50);
+            if (Math.abs(dx) > Math.abs(dy)) {
+                this.direction = dx < 0 ? Direction.LEFT : Direction.RIGHT;
+            } else {
+                this.direction = dy < 0 ? Direction.DOWN : Direction.UP;
+            }
+
+            attack(50, 50);
         }
     }
 
     public void attack(double width, double height) {
-        new Hitbox(this, width, height, 5, 0.5, 40, 10, direction);
+        Attack.hit(this, width, height, 5, 0.25).directional().fromTo(
+                new Vec2(0, this.getScaledHeight()),
+                new Vec2(0, 0),
+                5
+        );
     }
 
     @Override

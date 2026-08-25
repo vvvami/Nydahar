@@ -4,12 +4,13 @@ import java.awt.event.*;
 
 public class Input implements KeyListener, MouseListener, MouseMotionListener {
     // ------ KEYBOARD -------
-    public boolean up;
-    public boolean down;
-    public boolean left;
-    public boolean right;
+    public volatile boolean up_pressed;
+    public volatile boolean up_down;
+    public volatile boolean down;
+    public volatile boolean left;
+    public volatile boolean right;
 
-    public boolean space;
+    public volatile boolean space;
 
     // ------ MOUSE ------
 
@@ -25,7 +26,10 @@ public class Input implements KeyListener, MouseListener, MouseMotionListener {
     @Override
     public void keyPressed(KeyEvent e) {
         switch (e.getKeyCode()) {
-            case KeyEvent.VK_W -> up = true;
+            case KeyEvent.VK_W -> {
+                up_pressed = true;
+                up_down = true;
+            }
             case KeyEvent.VK_S -> down = true;
             case KeyEvent.VK_A -> left = true;
             case KeyEvent.VK_D -> right = true;
@@ -36,7 +40,7 @@ public class Input implements KeyListener, MouseListener, MouseMotionListener {
     @Override
     public void keyReleased(KeyEvent e) {
         switch (e.getKeyCode()) {
-            case KeyEvent.VK_W -> up = false;
+            case KeyEvent.VK_W -> up_down = false;
             case KeyEvent.VK_S -> down = false;
             case KeyEvent.VK_A -> left = false;
             case KeyEvent.VK_D -> right = false;

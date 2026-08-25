@@ -332,7 +332,7 @@ public abstract class GameObject {
 
         else if (vel.x < 0) return Direction.LEFT;
 
-        return Direction.NONE;
+        return null;
     }
 
     public boolean isGrounded() {

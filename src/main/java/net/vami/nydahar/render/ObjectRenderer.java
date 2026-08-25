@@ -3,15 +3,12 @@ package net.vami.nydahar.render;
 import net.vami.nydahar.game.Game;
 import net.vami.nydahar.object.GameObject;
 import net.vami.nydahar.object.entity.EntityObject;
-import net.vami.nydahar.object.interaction.collision.Collider;
-import net.vami.nydahar.object.interaction.damage.Hitbox;
+import net.vami.nydahar.object.interaction.damage.Attack;
 import net.vami.nydahar.render.sprite.Sprite;
 import net.vami.nydahar.util.AABB;
 import net.vami.nydahar.util.MathUtil;
-import net.vami.nydahar.util.Ray2;
 import net.vami.nydahar.util.Vec2;
 
-import javax.swing.text.StyleConstants;
 import java.awt.*;
 
 public class ObjectRenderer {
@@ -57,8 +54,8 @@ public class ObjectRenderer {
 
         g.setColor(Color.green);
 
-        for (Hitbox hitbox : Hitbox.map().keySet()) {
-            AABB box = hitbox.getBox();
+        for (Attack attack : Attack.map().keySet()) {
+            AABB box = attack.getBox();
             g.drawRect((int) box.x, (int) box.y,
                     (int) box.width, (int) box.height);
         }
