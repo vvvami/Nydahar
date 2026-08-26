@@ -145,10 +145,7 @@ public class SpriteManager {
 
             int slash = key.lastIndexOf('/');
 
-            // Not inside a directory
-            if (slash == -1) {
-                continue;
-            }
+            if (slash == -1) continue;
 
             String directory = key.substring(0, slash);
             String fileName = key.substring(slash + 1);
@@ -158,42 +155,26 @@ public class SpriteManager {
             try {
                 frameIndex = Integer.parseInt(fileName);
             } catch (NumberFormatException ignored) {
-                // foo/bar.png isn't an animation frame
                 continue;
             }
 
-            TreeMap<Integer, Sprite> frames =
-                    animationFrames.computeIfAbsent(
-                            directory,
-                            k -> new TreeMap<>()
-                    );
+            TreeMap<Integer, Sprite> frames = animationFrames.computeIfAbsent(directory, k -> new TreeMap<>());
 
             if (frames.put(frameIndex, entry.getValue()) != null) {
-                throw new IllegalStateException(
-                        "Duplicate animation frame " + frameIndex +
-                                " for animation " + directory
-                );
+                throw new IllegalStateException("Duplicate animation frame " + frameIndex + " for animation " + directory);
             }
         }
 
-        for (Map.Entry<String, TreeMap<Integer, Sprite>> entry
-                : animationFrames.entrySet()) {
+        for (Map.Entry<String, TreeMap<Integer, Sprite>> entry : animationFrames.entrySet()) {
 
             String animationKey = entry.getKey();
             TreeMap<Integer, Sprite> frameSprites = entry.getValue();
 
-            // Don't consider a single numbered sprite an animation
-            if (frameSprites.size() < 2) {
-                continue;
-            }
+            if (frameSprites.size() < 2) continue;
 
-            // Require 1.png, 2.png, 3.png, ...
             for (int i = 1; i <= frameSprites.size(); i++) {
                 if (!frameSprites.containsKey(i)) {
-                    throw new IllegalStateException(
-                            "Missing frame " + i +
-                                    " in animation " + animationKey
-                    );
+                    throw new IllegalStateException("Missing frame " + i + " in animation " + animationKey);
                 }
             }
 
@@ -205,11 +186,7 @@ public class SpriteManager {
                             new SpriteFrame(sprite, frameDuration))
                     .toArray(SpriteFrame[]::new);
 
-            SpriteAnimation animation = new SpriteAnimation(
-                    frameDuration,
-                    AnimationMode.LOOP, // whatever your looping enum value is
-                    frames
-            );
+            SpriteAnimation animation = new SpriteAnimation(frameDuration, AnimationMode.LOOP, frames);
 
             animations.put(animationKey, animation);
         }
