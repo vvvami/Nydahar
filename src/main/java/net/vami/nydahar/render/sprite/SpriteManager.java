@@ -1,6 +1,4 @@
-package net.vami.nydahar.render;
-
-import net.vami.nydahar.render.sprite.Sprite;
+package net.vami.nydahar.render.sprite;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -14,6 +12,7 @@ import java.nio.file.Paths;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.stream.Stream;
@@ -21,6 +20,7 @@ import java.util.stream.Stream;
 public class SpriteManager {
 
     private final Map<String, Sprite> sprites = new HashMap<>();
+    private final Map<String, SpriteAnimation> animations = new HashMap<>();
 
     public void register() {
         try {
@@ -37,6 +37,8 @@ public class SpriteManager {
 
                 default -> throw new IllegalStateException("Unsupported asset protocol: " + assetsUrl.getProtocol());
             }
+
+            registerAnimations();
 
             System.out.println("Loaded " + sprites.size() + " sprites");
 
@@ -131,5 +133,89 @@ public class SpriteManager {
                 }
             }
         }
+    }
+
+    private void registerAnimations() {
+
+        Map<String, TreeMap<Integer, Sprite>> animationFrames = new HashMap<>();
+
+        for (Map.Entry<String, Sprite> entry : sprites.entrySet()) {
+
+            String key = entry.getKey();
+
+            int slash = key.lastIndexOf('/');
+
+            // Not inside a directory
+            if (slash == -1) {
+                continue;
+            }
+
+            String directory = key.substring(0, slash);
+            String fileName = key.substring(slash + 1);
+
+            int frameIndex;
+
+            try {
+                frameIndex = Integer.parseInt(fileName);
+            } catch (NumberFormatException ignored) {
+                // foo/bar.png isn't an animation frame
+                continue;
+            }
+
+            TreeMap<Integer, Sprite> frames =
+                    animationFrames.computeIfAbsent(
+                            directory,
+                            k -> new TreeMap<>()
+                    );
+
+            if (frames.put(frameIndex, entry.getValue()) != null) {
+                throw new IllegalStateException(
+                        "Duplicate animation frame " + frameIndex +
+                                " for animation " + directory
+                );
+            }
+        }
+
+        for (Map.Entry<String, TreeMap<Integer, Sprite>> entry
+                : animationFrames.entrySet()) {
+
+            String animationKey = entry.getKey();
+            TreeMap<Integer, Sprite> frameSprites = entry.getValue();
+
+            // Don't consider a single numbered sprite an animation
+            if (frameSprites.size() < 2) {
+                continue;
+            }
+
+            // Require 1.png, 2.png, 3.png, ...
+            for (int i = 1; i <= frameSprites.size(); i++) {
+                if (!frameSprites.containsKey(i)) {
+                    throw new IllegalStateException(
+                            "Missing frame " + i +
+                                    " in animation " + animationKey
+                    );
+                }
+            }
+
+            double frameDuration = 0.1;
+
+            SpriteFrame[] frames = frameSprites.values()
+                    .stream()
+                    .map(sprite ->
+                            new SpriteFrame(sprite, frameDuration))
+                    .toArray(SpriteFrame[]::new);
+
+            SpriteAnimation animation = new SpriteAnimation(
+                    frameDuration,
+                    AnimationMode.LOOP, // whatever your looping enum value is
+                    frames
+            );
+
+            animations.put(animationKey, animation);
+        }
+    }
+
+    public Map<String, SpriteAnimation> getAnimations() {
+        return animations;
     }
 }

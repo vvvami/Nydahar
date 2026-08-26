@@ -10,9 +10,9 @@ public class SpriteAnimator {
     private boolean playing;
     private boolean finished;
 
-    private double speed = 1.0;
+    private double speed = 1;
 
-    public void play(SpriteAnimation animation) {
+    public void play(SpriteAnimation animation, float speed) {
         if (this.animation == animation && playing) return;
 
         this.animation = animation;
@@ -20,9 +20,10 @@ public class SpriteAnimator {
         this.timer = 0;
         this.playing = true;
         this.finished = false;
+        this.speed = speed;
     }
 
-    public void playFromStart(SpriteAnimation animation) {
+    public void playFromStart(SpriteAnimation animation, float speed) {
         this.animation = animation;
         this.frame = 0;
         this.timer = 0;
@@ -103,4 +104,5 @@ public class SpriteAnimator {
     public double getSpeed() {
         return this.speed;
     }
+
 }

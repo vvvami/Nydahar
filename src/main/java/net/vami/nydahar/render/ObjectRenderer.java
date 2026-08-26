@@ -17,6 +17,7 @@ public class ObjectRenderer {
 
     public void render(Graphics2D g, GameObject gameObject, double alpha) {
         Sprite sprite = gameObject.getSprite();
+
         if (sprite == null) return;
 
         Vec2 pos = gameObject.getPos();

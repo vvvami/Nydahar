@@ -7,6 +7,8 @@ import net.vami.nydahar.object.interaction.collision.Collider;
 import net.vami.nydahar.object.entity.EntityObject;
 import net.vami.nydahar.object.entity.attribute.Attributes;
 import net.vami.nydahar.object.interaction.damage.Attack;
+import net.vami.nydahar.render.sprite.SpriteAnimation;
+import net.vami.nydahar.render.sprite.SpriteAnimator;
 import net.vami.nydahar.render.sprite.Sprites;
 import net.vami.nydahar.util.Vec2;
 
@@ -28,6 +30,7 @@ public class PlayerEntity extends EntityObject {
 
         setCollider(new Collider(this,
                 0.3, 0.8, 0.7, 0));
+
     }
 
     public void inputTick(double dt, Input input) {
@@ -201,6 +204,7 @@ public class PlayerEntity extends EntityObject {
 
     @Override
     public void registerSprite() {
-        setSprite(Sprites.get("entities/player/player"));
+        super.registerSprite();
+        animator.play(Sprites.getAnimation("entities/player/player_idle"), 0.5f);
     }
 }

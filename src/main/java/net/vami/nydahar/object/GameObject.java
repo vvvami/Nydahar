@@ -8,7 +8,9 @@ import net.vami.nydahar.object.entity.attribute.Attributes;
 import net.vami.nydahar.render.RenderLayer;
 import net.vami.nydahar.render.RenderSettings;
 import net.vami.nydahar.render.sprite.Sprite;
+import net.vami.nydahar.render.sprite.SpriteAnimation;
 import net.vami.nydahar.render.sprite.SpriteAnimator;
+import net.vami.nydahar.render.sprite.Sprites;
 import net.vami.nydahar.util.AABB;
 import net.vami.nydahar.util.MathUtil;
 import net.vami.nydahar.util.Ray2;
@@ -57,6 +59,9 @@ public abstract class GameObject {
         objectMap.put(uuid, this);
 
         registerSprite();
+        if (animator == null) return;
+
+        setSprite(animator.getSprite());
     }
 
     public void update(double dt) {
@@ -412,6 +417,8 @@ public abstract class GameObject {
     }
 
     public Sprite getSprite() {
+        if (animator == null && sprite == null) return Sprites.get("no_texture");
+
         if (animator == null) return sprite;
 
         return animator.getSprite();
@@ -423,6 +430,10 @@ public abstract class GameObject {
 
     public boolean hasSprite() {
         return sprite != null;
+    }
+
+    public SpriteAnimator getAnimator() {
+        return this.animator;
     }
 
     public void setScale(double scale) {
@@ -466,7 +477,7 @@ public abstract class GameObject {
     }
 
     public void registerSprite() {
-
+        this.animator = new SpriteAnimator();
     }
 
 }

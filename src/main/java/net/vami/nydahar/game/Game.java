@@ -9,7 +9,7 @@ import net.vami.nydahar.registry.custom.Entities;
 import net.vami.nydahar.registry.custom.Tiles;
 import net.vami.nydahar.render.Camera;
 import net.vami.nydahar.render.ObjectRenderer;
-import net.vami.nydahar.render.SpriteManager;
+import net.vami.nydahar.render.sprite.SpriteManager;
 import net.vami.nydahar.util.MathUtil;
 
 import javax.swing.*;

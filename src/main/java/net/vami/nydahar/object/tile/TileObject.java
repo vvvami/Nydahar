@@ -21,4 +21,9 @@ public abstract class TileObject extends GameObject {
     public boolean hasGravity() {
         return false;
     }
+
+    @Override
+    public void registerSprite() {
+
+    }
 }

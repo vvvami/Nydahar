@@ -21,11 +21,23 @@ public class Collider {
         this.top = top;
         this.right = right;
         this.bottom = bottom;
+
+        int sWidth;
+        int sHeight;
+
+        if (object.getSprite() == null) {
+            sWidth = (int) (16 * object.getTotalScale());
+            sHeight = (int) (16 * object.getTotalScale());
+        } else {
+            sWidth = object.getSprite().getWidth();
+            sHeight = object.getSprite().getHeight();
+        }
+
         collisionBox = new AABB(
                 object.getPos().x,
                 object.getPos().y,
-                object.getSprite().getWidth(),
-                object.getSprite().getHeight());
+                sWidth,
+                sHeight);
 
         update(object);
         colliderMap.put(this, object);
